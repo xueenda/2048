@@ -1,54 +1,58 @@
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-import { getBoard, isGameOver, message } from "./2048.js";
+import { getBoard, message } from "./2048.js";
 
-// Setup your API Key
-let API_KEY = "";
 let genAI = null;
+let chatSession = null;
 
-async function getNextMove() {
-  if (isGameOver()) {
-    return;
+// This function handles the "setup" only when needed
+function initializeAI() {
+  const apiKeyInput = document.getElementById('API_KEY');
+  const key = apiKeyInput.value.trim();
+
+  if (!key) {
+    message("Please enter an API Key first!");
+    return false;
   }
 
-  if (!genAI) {
-    API_KEY = document.getElementById("API_KEY").value;
-    if (!API_KEY) {
-      message("You need Gemini API Key to enable AI feature.")
-      return;
-    }
-    genAI = new GoogleGenerativeAI(API_KEY);
-  }
-
-  const currentBoard = getBoard();
   try {
-    message("Loading AI suggestion...")
+    genAI = new GoogleGenerativeAI(key);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash", // Use stable model version
-      generationConfig: { responseMimeType: "application/json" } // Force JSON
+      model: "gemini-2.5-flash",
+      systemInstruction: "You are a 2048 game solver. The user will send a 4x4 JSON array. Analyze the board and return ONLY JSON: {\"move\": \"Up\"|\"Down\"|\"Left\"|\"Right\", \"confidence\": 0-1}.",
+      generationConfig: { responseMimeType: "application/json" }
     });
 
-    // Convert the 2D array to a string for the prompt
-    const boardString = JSON.stringify(currentBoard);
-
-    const prompt = `
-      You are an expert 2048 player. 
-      Given this 4x4 grid: ${boardString}
-      0 represents an empty cell.
-      Analyze the best legal move (Up, Down, Left, or Right) to achieve the highest tile.
-      Return ONLY a JSON object in this format: {"move": "Direction", "reason": "Short explanation"}
-    `;
-
-    // Send the request
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const jsonResponse = JSON.parse(response.text());
-
-    message(`AI suggests: ${jsonResponse.move}\nReason: ${jsonResponse.reason}`);
-    return jsonResponse.move; // Returns "Up", "Down", etc.
-
-  } catch (error) {
-    message(`AI Move Error: ${error}`);
+    chatSession = model.startChat();
+    return true;
+  } catch (err) {
+    message("Invalid API Key format.");
+    return false;
   }
 }
 
+async function getNextMove() {
+  // 1. Ensure AI is initialized with the current input value
+  if (!chatSession && !initializeAI()) return null;
+
+  const boardData = getBoard();
+  message("AI is thinking...");
+
+  try {
+    const result = await chatSession.sendMessage(JSON.stringify(boardData));
+    const data = JSON.parse(result.response.text());
+
+    message(`AI suggests moving: ${data.move} (${Math.round(data.confidence * 100)}% confident)`);
+    return data.move;
+  } catch (error) {
+    // If the key was revoked or expired, reset so user can try a new one
+    if (error.message.includes("403") || error.message.includes("401")) {
+      genAI = null;
+      chatSession = null;
+    }
+    message(`AI Error: ${error.message}`);
+    return null;
+  }
+}
+
+// Expose to window so HTML buttons can see it
 window.getNextMove = getNextMove;
