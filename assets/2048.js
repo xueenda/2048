@@ -216,8 +216,16 @@ function afterMove(changed) {
 }
 
 function handleKeyMove(e) {
-  // Prevent arrow keys from scrolling the page and cursor
-  e.preventDefault();
+  const tag = e.target.tagName;
+
+  if (tag === "INPUT") {
+    return;
+  }
+
+  // Now prevent default only for game control
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+    e.preventDefault();
+  }
 
   let changed = false;
   switch (e.key) {
