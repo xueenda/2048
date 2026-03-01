@@ -6,6 +6,21 @@ function resetGrid() {
 }
 
 let board = resetGrid();
+let game_over = false;
+
+export function getBoard() {
+  return board;
+}
+
+export function isGameOver() {
+  return game_over;
+}
+
+// Displays a status message (win/lose). Called with no args to clear it.
+export function message(msg) {
+  const status = document.getElementById("status");
+  status.innerText = msg || "";
+}
 
 // Rebuilds the DOM grid from the current board state
 function render() {
@@ -30,6 +45,7 @@ function render() {
 // Resets the board and seeds it with a random number of 2s (at least 1)
 function initializeBoard() {
   board = resetGrid();
+  game_over = false;
   message(); // clear any previous win/lose message
 
   // Pick between 1–16 random cells to seed with 2
@@ -39,14 +55,6 @@ function initializeBoard() {
   shuffled.forEach(i => board[Math.floor(i / 4)][i % 4] = 2);
 
   render();
-}
-
-initializeBoard();
-
-// Displays a status message (win/lose). Called with no args to clear it.
-function message(msg) {
-  const status = document.getElementById("status");
-  status.innerText = msg || "";
 }
 
 // Maps a tile value to a color. Higher values become darker shades of orange.
@@ -163,14 +171,41 @@ function gameComplete() {
   return board.some(row => row.includes(2048));
 }
 
+function canMerge() {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+
+      // Check if the current tile can merge with the tile to the right
+      if (c < size - 1 && board[r][c] === board[r][c + 1]) {
+        return true;
+      }
+
+      // Check if the current tile can merge with the tile below
+      if (r < size - 1 && board[r][c] === board[r + 1][c]) {
+        return true;
+      }
+    }
+  }
+
+  // No adjacent equal tiles found → no possible merges
+  return false;
+}
+
 // Called after every move. Handles rendering, win detection, and adding a new tile.
 // Skips everything if the board didn't change (no-op move).
 function afterMove(changed) {
-  if (!changed) return;
+  if (!changed) {
+    if (!canMerge()) {
+      game_over = true;
+      message("Game over!");
+    }
+    return;
+  }
 
   render();
 
   if (gameComplete()) {
+    game_over = true;
     message("Congratulations! You win!");
     return;
   }
@@ -196,3 +231,7 @@ function handleKeyMove(e) {
 }
 
 document.addEventListener("keydown", handleKeyMove);
+
+initializeBoard();
+
+window.initializeBoard = initializeBoard;

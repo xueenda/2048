@@ -41,4 +41,13 @@ button {
   margin-top: 10px;
   text-align: center;
   font-weight: 600;
+  width: 450px;
+}
+
+#output {
+  width: 450px;
+}
+
+#API_KEY {
+  width: 300px;
 }

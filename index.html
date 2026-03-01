@@ -6,14 +6,19 @@
   <link rel="stylesheet" href="assets/style.css">
 </head>
 
+<script type="module" src="assets/2048.js"></script>
+<script type="module" src="assets/genai.js"></script>
+
 <body>
   <div id="game">
     <button type="button" onclick="initializeBoard()">New Game</button>
+    <button type="button" onclick="getNextMove()">Ask AI</button>
+    <input type="text" id="API_KEY" name="Gemini API Key" placeholder="Gemini API Key">
     <div id="grid"></div>
     <div id="status"></div>
+    <div id="output"></div>
   </div>
 
-  <script src="assets/2048.js"></script>
 </body>
 
 </html>
