@@ -47,7 +47,7 @@ async function getNextMove() {
     return jsonResponse.move; // Returns "Up", "Down", etc.
 
   } catch (error) {
-    message("AI Move Error:", error);
+    message(`AI Move Error: ${error}`);
   }
 }
 
