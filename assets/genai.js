@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 import { getBoard, isGameOver, message } from "./2048.js";
 
-// 2. Setup your API Key
+// Setup your API Key
 let API_KEY = "";
 let genAI = null;
 
@@ -27,7 +27,7 @@ async function getNextMove() {
       generationConfig: { responseMimeType: "application/json" } // Force JSON
     });
 
-    // 1. Convert the 2D array to a string for the prompt
+    // Convert the 2D array to a string for the prompt
     const boardString = JSON.stringify(currentBoard);
 
     const prompt = `
@@ -38,7 +38,7 @@ async function getNextMove() {
       Return ONLY a JSON object in this format: {"move": "Direction", "reason": "Short explanation"}
     `;
 
-    // 2. Send the request
+    // Send the request
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const jsonResponse = JSON.parse(response.text());
@@ -52,5 +52,3 @@ async function getNextMove() {
 }
 
 window.getNextMove = getNextMove;
-
-// main();
